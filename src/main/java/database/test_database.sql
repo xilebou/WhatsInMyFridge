@@ -29,7 +29,7 @@ CREATE TABLE ingredients (
 );
 
 
-
+DROP TABLE IF EXISTS recipe_ingredient;
 CREATE TABLE recipe_ingredient (
                                    ingredient_barcode         VARCHAR(255),
                                    recipe_id                  VARCHAR(255),
@@ -61,7 +61,6 @@ INSERT INTO ingredients values (
                                    'unit'
                                );
 
-SELECT * FROM ingredients;
 
 
 INSERT INTO recipes
@@ -80,6 +79,3 @@ VALUES (
            2
        );
 
-
-
-SELECT * FROM recipe_ingredient WHERE recipe_id = 1;
