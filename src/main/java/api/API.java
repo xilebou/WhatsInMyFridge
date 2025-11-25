@@ -1,14 +1,10 @@
 package api;
 
 
-import api.handlers.IngredientHandler;
+import api.handlers.DatabaseRecordableHandler;
 import com.sun.net.httpserver.HttpServer;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpExchange;
-import recipes.Ingredient;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 public class API {
     private HttpServer server;
@@ -21,6 +17,6 @@ public class API {
     }
 
     private void initAllEndpoints() throws IOException {
-        server.createContext("/api/ingredients", new IngredientHandler());
+        server.createContext("/api/", new DatabaseRecordableHandler());
     }
 }

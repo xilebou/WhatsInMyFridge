@@ -27,13 +27,22 @@ public abstract class BaseHandler implements HttpHandler {
 
     protected Map<String, String> getParams(String uri) {
         Map<String, String> params = new TreeMap<>();
-        String[] stringParams = uri.split("\\?");
 
-        if (stringParams.length > 1) {
-            for (String s : stringParams[1].split("&")) {
-                params.put(s.split("=")[0], s.split("=")[1]);
+
+        String[] split = uri.split("/");
+        params.put("type", split[2]);
+
+
+
+        if (uri.contains("?")) {
+            String[] stringParams = uri.split("\\?");
+            if (stringParams.length > 1) {
+                for (String s : stringParams[1].split("&")) {
+                    params.put(s.split("=")[0], s.split("=")[1]);
+                }
             }
         }
+
 
         return params;
     }

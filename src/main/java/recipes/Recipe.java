@@ -2,14 +2,11 @@ package recipes;
 
 import database.DataBaseLink;
 import database.DataBaseRecordable;
-import org.sqlite.SQLiteException;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Map;
 
 public class Recipe implements DataBaseRecordable {
@@ -20,33 +17,82 @@ public class Recipe implements DataBaseRecordable {
     private String source;
     private int portion;
 
-    public static Recipe createRecipeFromDatabase(DataBaseLink dataBaseLink, Map<String,String> params) {
-        Recipe recipe = new Recipe();
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Map<Ingredient, Integer> getIngredients() {
+        return ingredients;
+    }
+
+    public void setIngredients(Map<Ingredient, Integer> ingredients) {
+        this.ingredients = ingredients;
+    }
+
+    public String getInstructionsASHtml() {
+        return instructionsASHtml;
+    }
+
+    public void setInstructionsASHtml(String instructionsASHtml) {
+        this.instructionsASHtml = instructionsASHtml;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public int getPortion() {
+        return portion;
+    }
+
+    public void setPortion(int portion) {
+        this.portion = portion;
+    }
+
+    public DataBaseRecordable assignedFromDatabase(DataBaseLink dataBaseLink, Map<String,String> params) {
         try (PreparedStatement statement = dataBaseLink.openConection()
                 .prepareStatement(
-                        "SELECT r.name," +
+                        "SELECT r.recipe_name," +
                                 " r.instructions," +
-                                " r.description," +
+                                " r.recipe_description," +
                                 " s.source_name," +
-                                " r.portion" +
-                                " FROM recipe r" +
-                                " JOIN source s ON r.source_id = s.id" +
-                                " WHERE r.recipe_id = ?"
+                                " r.portions" +
+                                " FROM recipes r" +
+                                " LEFT JOIN sources s ON r.source_id = s.id" +
+                                " WHERE r.id = ?"
                 )) {
             statement.setString(1, params.get("recipe_id"));
-            recipe.fromDataBaseRecord(dataBaseLink.request(statement));
+            System.out.println(params);
+            setValues(dataBaseLink.request(statement));
+            System.out.println(this.name);
         } catch (SQLException e) {
             System.out.println("SQLException: " + e.getMessage());
         }
-        return recipe;
+        return this;
     }
     @Override
-    public void fromDataBaseRecord(ResultSet rs) throws SQLException {
-        this.name = rs.getString("name");
+    public void setValues(ResultSet rs) throws SQLException {
+        this.name = rs.getString("recipe_name");
         this.instructionsASHtml = rs.getString("instructions");
-        this.description = rs.getString("description");
+        this.description = rs.getString("recipe_description");
         this.source = rs.getString("source_name");
-        this.portion = rs.getInt("portion");
+        this.portion = rs.getInt("portions");
     }
 
     @Override

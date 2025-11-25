@@ -19,8 +19,7 @@ public class Ingredient implements DataBaseRecordable {
     private QuantityType quantityType;
 
 
-    public static Ingredient createIngredientFromDatabase(DataBaseLink dataBaseLink, Map<String, String> params) {
-        Ingredient ingredient = new Ingredient();
+    public DataBaseRecordable assignedFromDatabase(DataBaseLink dataBaseLink, Map<String, String> params) {
         try (PreparedStatement statement = dataBaseLink.openConection()
                 .prepareStatement(
                         "SELECT PI.barcode," +
@@ -34,11 +33,11 @@ public class Ingredient implements DataBaseRecordable {
                                 " WHERE barcode = ?"
                 )) {
             statement.setString(1, params.get("barcode"));
-            ingredient.fromDataBaseRecord(dataBaseLink.request(statement));
+            setValues(dataBaseLink.request(statement));
         } catch (SQLException e) {
             System.out.println("SQLException: " + e.getMessage());
         }
-        return ingredient;
+        return this;
     }
     public String getIngredientName() {
         return ingredientName;
@@ -81,7 +80,7 @@ public class Ingredient implements DataBaseRecordable {
     }
 
     @Override
-    public void fromDataBaseRecord(ResultSet rs) throws SQLException {
+    public void setValues(ResultSet rs) throws SQLException {
         this.ingredientName = rs.getString("ingredient_name");
         this.barcode = rs.getString("barcode");
         if (rs.getString("ingredient_unit_type") != null) {

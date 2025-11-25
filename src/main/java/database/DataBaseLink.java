@@ -5,6 +5,7 @@ import org.sqlite.SQLiteException;
 
 import java.sql.*;
 import java.util.List;
+import java.util.Map;
 
 public abstract class DataBaseLink {
     private String url;

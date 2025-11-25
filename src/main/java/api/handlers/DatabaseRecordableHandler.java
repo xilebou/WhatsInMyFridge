@@ -1,27 +1,41 @@
 package api.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
+import database.DataBaseRecordable;
 import database.SqlLiteDataBaseLink;
 import recipes.Ingredient;
+import recipes.Recipe;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.SQLException;
+import java.util.Map;
 
-public class IngredientHandler extends BaseHandler {
+public class DatabaseRecordableHandler extends BaseHandler {
     @Override
     public void handle(HttpExchange exchange) {
+        Map<String,String> params = getParams(String.valueOf(exchange.getRequestURI()));
+        System.out.println(params);
+        DataBaseRecordable dataBaseRecordable = switch (params.get("type").toLowerCase()) {
+            case "ingredients" -> new Ingredient();
+            case "recipes" -> new Recipe();
+            default -> throw new IllegalStateException("Unexpected value: " + params.get("type").toLowerCase());
+        };
+
+
+
+
         switch (exchange.getRequestMethod()) {
             case "GET" -> {
                 try {
-                    handleGet(exchange);
+                    handleGet(exchange, dataBaseRecordable, params);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }
             case "POST" -> {
                 try {
-                    handlePost(exchange);
+                    handlePost(exchange, dataBaseRecordable, params);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -30,14 +44,14 @@ public class IngredientHandler extends BaseHandler {
     }
 
 
-    private void handleGet(HttpExchange exchange) throws IOException {
+    private void handleGet(HttpExchange exchange, DataBaseRecordable recordable, Map<String,String> params) throws IOException {
         try (OutputStream os = exchange.getResponseBody()) {
             try {
-                Ingredient ingredientToReturn = Ingredient.createIngredientFromDatabase(
+                recordable.assignedFromDatabase(
                         new SqlLiteDataBaseLink("jdbc:sqlite:database/devData.sqlite"),
-                        getParams(String.valueOf(exchange.getRequestURI()))
+                        params
                 );
-                byte[] response = mapper.writeValueAsBytes(ingredientToReturn);
+                byte[] response = mapper.writeValueAsBytes(recordable);
                 exchange.sendResponseHeaders(200, response.length);
                 os.write(response);
             } catch (IOException e) {
@@ -52,15 +66,14 @@ public class IngredientHandler extends BaseHandler {
         }
     }
 
-    private void handlePost(HttpExchange exchange) throws IOException {
+    private void handlePost(HttpExchange exchange, DataBaseRecordable recordable, Map<String,String> params) throws IOException {
         try (OutputStream os = exchange.getResponseBody()) {
             int responseCode = 201;
             byte[] response = new byte[0];
             try {
-                Ingredient ingredient = null;
                 try {
                     String json = new String(exchange.getRequestBody().readAllBytes());
-                    ingredient = mapper.readValue(json, Ingredient.class);
+                    recordable = mapper.readValue(json, recordable.getClass());
                 } catch (IOException e) {
                     System.out.println("Error: " + e.getMessage());
                     System.out.println("Invalid object format");
@@ -69,8 +82,8 @@ public class IngredientHandler extends BaseHandler {
                     mapper.writeValueAsBytes(false);
                 }
 
-                if (ingredient != null) {
-                    ingredient.saveToDatabase(new SqlLiteDataBaseLink("jdbc:sqlite:database/devData.sqlite"));
+                if (recordable != null) {
+                    recordable.saveToDatabase(new SqlLiteDataBaseLink("jdbc:sqlite:database/devData.sqlite"));
                     response = mapper.writeValueAsBytes(true);
                 }
 
