@@ -22,22 +22,11 @@ public abstract class DataBaseLink {
         this.url = url;
     }
 
-    public ResultSet request(PreparedStatement query) {
+    public ResultSet request(PreparedStatement query) throws SQLException {
         ResultSet resultSet = null;
 
-        try {
-            resultSet = query.executeQuery();
-        } catch (SQLException e) {
-            System.out.println("SQL Error! Check output console");
-        } finally {
-            if (resultSet != null) {
-                try {
-                    resultSet.close();
-                } catch (SQLException e) {
-                    // skip
-                }
-            }
-        }
+
+        resultSet = query.executeQuery();
         return resultSet;
     }
 

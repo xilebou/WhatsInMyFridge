@@ -11,8 +11,9 @@ DROP TABLE IF EXISTS recipes;
 CREATE TABLE recipes (
                          id                      INTEGER PRIMARY KEY AUTOINCREMENT ,
                          recipe_name             VARCHAR(50)     NOT NULL,
+                         instructions            BLOB       ,
                          recipe_description      VARCHAR(255),
-                         source_id               INTEGER  NOT NULL,
+                         source_id               INTEGER  ,
                          portions                INTEGER  NOT NULL DEFAULT 1,
 
                          FOREIGN KEY (source_id) REFERENCES sources(id)
@@ -105,18 +106,12 @@ INSERT INTO pantry_ingredients (barcode,
           12
          );
 
-INSERT INTO recipes
-(recipe_name, recipe_description, source_id)
-VALUES (
-           'omelet',
-           'a dish made with eggs, and only eggs',
-           0
-       );
+
 
 
 INSERT INTO recipe_ingredient (ingredient_barcode, recipe_id, ingredient_quantity)
 VALUES (
-           '1000421421',
+           '00100',
            1,
            2
        );

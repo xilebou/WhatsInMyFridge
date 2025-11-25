@@ -34,7 +34,7 @@ public class Ingredient implements DataBaseRecordable {
                                 " WHERE barcode = ?"
                 )) {
             statement.setString(1, params.get("barcode"));
-            ingredient.fromDataBaseRecord(statement.executeQuery());
+            ingredient.fromDataBaseRecord(dataBaseLink.request(statement));
         } catch (SQLException e) {
             System.out.println("SQLException: " + e.getMessage());
         }
