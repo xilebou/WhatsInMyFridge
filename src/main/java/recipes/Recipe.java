@@ -7,7 +7,9 @@ import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class Recipe implements DataBaseRecordable {
     private String name;
@@ -16,6 +18,7 @@ public class Recipe implements DataBaseRecordable {
     private String description;
     private String source;
     private int portion;
+    private Set<String> categories = new HashSet<>();
 
     public String getName() {
         return name;
@@ -65,7 +68,15 @@ public class Recipe implements DataBaseRecordable {
         this.portion = portion;
     }
 
-    public DataBaseRecordable assignedFromDatabase(DataBaseLink dataBaseLink, Map<String,String> params) {
+    public Set<String> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(Set<String> categories) {
+        this.categories = categories;
+    }
+
+    public DataBaseRecordable assignedFromDatabase(DataBaseLink dataBaseLink, Map<String, String> params) {
         try (PreparedStatement statement = dataBaseLink.openConection()
                 .prepareStatement(
                         "SELECT r.recipe_name," +
@@ -78,14 +89,22 @@ public class Recipe implements DataBaseRecordable {
                                 " WHERE r.id = ?"
                 )) {
             statement.setString(1, params.get("recipe_id"));
-            System.out.println(params);
             setValues(dataBaseLink.request(statement));
-            System.out.println(this.name);
+            PreparedStatement newStatement = dataBaseLink.openConection()
+                    .prepareStatement("SELECT tag_name FROM recipe_categories WHERE recipe_id = ?");
+            newStatement.setString(1, params.get("recipe_id"));
+            ResultSet rs = newStatement.executeQuery();
+            while (rs.next()) {
+                categories.add(rs.getString("tag_name"));
+            }
+
+
         } catch (SQLException e) {
             System.out.println("SQLException: " + e.getMessage());
         }
         return this;
     }
+
     @Override
     public void setValues(ResultSet rs) throws SQLException {
         this.name = rs.getString("recipe_name");
@@ -113,5 +132,14 @@ public class Recipe implements DataBaseRecordable {
         p.setString(3, this.description);
         p.setString(4, null);
         p.setInt(5, this.portion);
+
+        for (String category : this.categories) {
+            PreparedStatement p2 = link.openConection().prepareStatement("INSERT INTO recipe_categories (" +
+                    " recipe_id," +
+                    " tag_name" +
+                    ") VALUES ((SELECT id FROM recipes WHERE recipe_name = ?), ?)");
+            p2.setString(1, this.name);
+            p2.setString(2, category);
+        }
     }
 }

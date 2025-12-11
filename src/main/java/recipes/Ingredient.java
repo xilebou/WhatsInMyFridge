@@ -20,19 +20,23 @@ public class Ingredient implements DataBaseRecordable {
 
 
     public DataBaseRecordable assignedFromDatabase(DataBaseLink dataBaseLink, Map<String, String> params) {
+
+
+
+        boolean barcode = params.containsKey("barcode");
         try (PreparedStatement statement = dataBaseLink.openConection()
                 .prepareStatement(
                         "SELECT PI.barcode," +
                                 " PI.expiry_date," +
                                 " I.full_ingredient_name AS 'ingredient_name'," +
-                                " GI.ingredient_unit_type," +
-                                " PI.ingredient_quantity" +
+                                " PI.ingredient_quantity," +
+                                " GI.ingredient_unit_type" +
                                 " FROM pantry_ingredients PI" +
-                                " NATURAL JOIN ingredients I" +
-                                " JOIN generic_ingredients GI ON I.generic_ingredient_name = GI.generic_name" +
-                                " WHERE barcode = ?"
+                                "    JOIN ingredients I ON PI.barcode = I.barcode" +
+                                "    LEFT JOIN generic_ingredients GI ON I.generic_ingredient_name = GI.generic_name" +
+                                (barcode? " WHERE PI.barcode = ?":  "")
                 )) {
-            statement.setString(1, params.get("barcode"));
+            if (barcode) statement.setString(1, params.get("barcode"));
             setValues(dataBaseLink.request(statement));
         } catch (SQLException e) {
             System.out.println("SQLException: " + e.getMessage());

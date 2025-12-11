@@ -15,7 +15,6 @@ public class DatabaseRecordableHandler extends BaseHandler {
     @Override
     public void handle(HttpExchange exchange) {
         Map<String,String> params = getParams(String.valueOf(exchange.getRequestURI()));
-        System.out.println(params);
         DataBaseRecordable dataBaseRecordable = switch (params.get("type").toLowerCase()) {
             case "ingredients" -> new Ingredient();
             case "recipes" -> new Recipe();
