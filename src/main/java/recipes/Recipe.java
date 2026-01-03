@@ -2,6 +2,7 @@ package recipes;
 
 import database.DataBaseLink;
 import database.DataBaseRecordable;
+import database.factories.DataBaseRecordableFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
@@ -19,6 +20,25 @@ public class Recipe implements DataBaseRecordable {
     private String source;
     private int portion;
     private Set<String> categories = new HashSet<>();
+
+    public static DataBaseRecordableFactory createFactory() {
+        return new DataBaseRecordableFactory() {
+            @Override
+            protected Class<? extends DataBaseRecordable> getRecordableClass() {
+                return null;
+            }
+
+            @Override
+            protected String createSQLStatement(Map<String, String> params) {
+                return "";
+            }
+
+            @Override
+            protected void setStatementParameters(PreparedStatement statement, Map<String, String> params) throws SQLException {
+
+            }
+        };
+    }
 
     public String getName() {
         return name;

@@ -25,12 +25,12 @@ CREATE TABLE recipes (
 
 DROP TABLE IF EXISTS recipe_ingredient;
 CREATE TABLE recipe_ingredient (
-                                   ingredient_barcode         VARCHAR(255),
+                                   ingredient_name         VARCHAR(255),
                                    recipe_id                  VARCHAR(255),
                                    ingredient_quantity        DECIMAL      NOT NULL DEFAULT 1,
 
-                                   PRIMARY KEY (ingredient_barcode,recipe_id),
-                                   FOREIGN KEY (ingredient_barcode) REFERENCES ingredients(barcode),
+                                   PRIMARY KEY (ingredient_name,recipe_id),
+                                   FOREIGN KEY (ingredient_name) REFERENCES generic_ingredients(generic_name),
                                    FOREIGN KEY (recipe_id) REFERENCES recipes(id)
 );
 
@@ -134,9 +134,9 @@ INSERT INTO pantry_ingredients (barcode,
 
 
 
-INSERT INTO recipe_ingredient (ingredient_barcode, recipe_id, ingredient_quantity)
+INSERT INTO recipe_ingredient (ingredient_name, recipe_id, ingredient_quantity)
 VALUES (
-           '0000101209159',
+           'eggs',
            1,
            2
        );

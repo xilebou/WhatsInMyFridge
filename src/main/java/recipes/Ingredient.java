@@ -2,6 +2,7 @@ package recipes;
 
 import database.DataBaseLink;
 import database.DataBaseRecordable;
+import database.factories.DataBaseRecordableFactory;
 import org.sqlite.SQLiteException;
 
 import java.sql.PreparedStatement;
@@ -18,10 +19,32 @@ public class Ingredient implements DataBaseRecordable {
     private int quantity;
     private QuantityType quantityType;
 
+    public static DataBaseRecordableFactory createFactory() {
+        return new DataBaseRecordableFactory() {
+            @Override
+            protected Class<? extends DataBaseRecordable> getRecordableClass() {
+                return Ingredient.class;
+            }
+            @Override
+            protected String createSQLStatement(Map<String, String> params) {
+                return "SELECT PI.barcode," +
+                        " PI.expiry_date," +
+                        " I.full_ingredient_name AS 'ingredient_name'," +
+                        " PI.ingredient_quantity," +
+                        " GI.ingredient_unit_type" +
+                        " FROM pantry_ingredients PI" +
+                        "    JOIN ingredients I ON PI.barcode = I.barcode" +
+                        "    LEFT JOIN generic_ingredients GI ON I.generic_ingredient_name = GI.generic_name" +
+                        (params.containsKey("barcode") ? " WHERE PI.barcode = ?" : "");
+            }
 
+            @Override
+            protected void setStatementParameters(PreparedStatement statement, Map<String, String> params) throws SQLException {
+                if (params.containsKey("barcode")) statement.setString(1, params.get("barcode"));
+            }
+        };
+    }
     public DataBaseRecordable assignedFromDatabase(DataBaseLink dataBaseLink, Map<String, String> params) {
-
-
 
         boolean barcode = params.containsKey("barcode");
         try (PreparedStatement statement = dataBaseLink.openConection()

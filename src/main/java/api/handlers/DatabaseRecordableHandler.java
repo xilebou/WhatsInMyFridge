@@ -3,54 +3,71 @@ package api.handlers;
 import com.sun.net.httpserver.HttpExchange;
 import database.DataBaseRecordable;
 import database.SqlLiteDataBaseLink;
+import database.factories.DataBaseRecordableFactory;
 import recipes.Ingredient;
 import recipes.Recipe;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class DatabaseRecordableHandler extends BaseHandler {
     @Override
     public void handle(HttpExchange exchange) {
         Map<String,String> params = getParams(String.valueOf(exchange.getRequestURI()));
-        DataBaseRecordable dataBaseRecordable = switch (params.get("type").toLowerCase()) {
-            case "ingredients" -> new Ingredient();
-            case "recipes" -> new Recipe();
+        DataBaseRecordableFactory factory;
+        DataBaseRecordable recordableClass;
+
+        switch (params.get("type").toLowerCase()) {
+            case "ingredients" -> {
+                factory = Ingredient.createFactory();
+                recordableClass = new Ingredient();
+            }
+            case "recipes" -> {
+                factory = Recipe.createFactory();
+                recordableClass = new Recipe();
+            }
             default -> throw new IllegalStateException("Unexpected value: " + params.get("type").toLowerCase());
         };
-
 
 
 
         switch (exchange.getRequestMethod()) {
             case "GET" -> {
                 try {
-                    handleGet(exchange, dataBaseRecordable, params);
+                    handleGet(exchange, factory, params);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }
             case "POST" -> {
                 try {
-                    handlePost(exchange, dataBaseRecordable, params);
+                    handlePost(exchange, recordableClass, params); // todo replace with factory instead
                 } catch (IOException e) {
                     throw new RuntimeException(e);
+
                 }
             }
         }
     }
 
 
-    private void handleGet(HttpExchange exchange, DataBaseRecordable recordable, Map<String,String> params) throws IOException {
+    private void handleGet(HttpExchange exchange, DataBaseRecordableFactory factory, Map<String,String> params) throws IOException {
         try (OutputStream os = exchange.getResponseBody()) {
             try {
-                recordable.assignedFromDatabase(
-                        new SqlLiteDataBaseLink("jdbc:sqlite:database/devData.sqlite"),
-                        params
-                );
-                byte[] response = mapper.writeValueAsBytes(recordable);
+                List<DataBaseRecordable> records = (ArrayList<DataBaseRecordable>) factory
+                        .createDataBaseRecordable(
+                                new SqlLiteDataBaseLink("jdbc:sqlite:database/devData.sqlite"),
+                                params
+                        );
+                byte[] response = mapper.writeValueAsBytes(records);
+                exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+                exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
                 exchange.sendResponseHeaders(200, response.length);
                 os.write(response);
             } catch (IOException e) {
