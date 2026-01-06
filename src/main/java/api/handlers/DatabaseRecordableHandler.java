@@ -93,8 +93,8 @@ public class DatabaseRecordableHandler extends BaseHandler {
                 } catch (IOException e) {
                     System.out.println("Error: " + e.getMessage());
                     System.out.println("Invalid object format");
+                    responseCode = 401;
                 } finally {
-                    responseCode = 400;
                     mapper.writeValueAsBytes(false);
                 }
 

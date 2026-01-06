@@ -44,28 +44,6 @@ public class Ingredient implements DataBaseRecordable {
             }
         };
     }
-    public DataBaseRecordable assignedFromDatabase(DataBaseLink dataBaseLink, Map<String, String> params) {
-
-        boolean barcode = params.containsKey("barcode");
-        try (PreparedStatement statement = dataBaseLink.openConection()
-                .prepareStatement(
-                        "SELECT PI.barcode," +
-                                " PI.expiry_date," +
-                                " I.full_ingredient_name AS 'ingredient_name'," +
-                                " PI.ingredient_quantity," +
-                                " GI.ingredient_unit_type" +
-                                " FROM pantry_ingredients PI" +
-                                "    JOIN ingredients I ON PI.barcode = I.barcode" +
-                                "    LEFT JOIN generic_ingredients GI ON I.generic_ingredient_name = GI.generic_name" +
-                                (barcode? " WHERE PI.barcode = ?":  "")
-                )) {
-            if (barcode) statement.setString(1, params.get("barcode"));
-            setValues(dataBaseLink.request(statement));
-        } catch (SQLException e) {
-            System.out.println("SQLException: " + e.getMessage());
-        }
-        return this;
-    }
     public String getIngredientName() {
         return ingredientName;
     }
@@ -139,7 +117,7 @@ public class Ingredient implements DataBaseRecordable {
         try {
             link.insert(p);
         } catch (SQLiteException e) {
-            // if already exists
+            // if already exists, update the record instead
             try {
                 potentialUpdate = link.openConection()
                         .prepareStatement("UPDATE pantry_ingredients SET ingredient_quantity = ingredient_quantity + ? WHERE barcode = ?");

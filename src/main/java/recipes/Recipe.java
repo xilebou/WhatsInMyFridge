@@ -25,17 +25,26 @@ public class Recipe implements DataBaseRecordable {
         return new DataBaseRecordableFactory() {
             @Override
             protected Class<? extends DataBaseRecordable> getRecordableClass() {
-                return null;
+                return Recipe.class;
             }
 
             @Override
             protected String createSQLStatement(Map<String, String> params) {
-                return "";
+                return "SELECT " +
+                        " r.recipe_name," +
+                        " r.instructions," +
+                        " r.recipe_description," +
+                        " r.portions," +
+                        " s.source_name," +
+                        " s.source_url " +
+                        " FROM recipes r " +
+                        " JOIN sources s ON r.source_id = s.id " +
+                        "WHERE recipe_name = ? ";
             }
 
             @Override
             protected void setStatementParameters(PreparedStatement statement, Map<String, String> params) throws SQLException {
-
+                if (params.containsKey("recipe_name")) statement.setString(1, params.get("recipe_name"));
             }
         };
     }
@@ -96,35 +105,6 @@ public class Recipe implements DataBaseRecordable {
         this.categories = categories;
     }
 
-    public DataBaseRecordable assignedFromDatabase(DataBaseLink dataBaseLink, Map<String, String> params) {
-        try (PreparedStatement statement = dataBaseLink.openConection()
-                .prepareStatement(
-                        "SELECT r.recipe_name," +
-                                " r.instructions," +
-                                " r.recipe_description," +
-                                " s.source_name," +
-                                " r.portions" +
-                                " FROM recipes r" +
-                                " LEFT JOIN sources s ON r.source_id = s.id" +
-                                " WHERE r.id = ?"
-                )) {
-            statement.setString(1, params.get("recipe_id"));
-            setValues(dataBaseLink.request(statement));
-            PreparedStatement newStatement = dataBaseLink.openConection()
-                    .prepareStatement("SELECT tag_name FROM recipe_categories WHERE recipe_id = ?");
-            newStatement.setString(1, params.get("recipe_id"));
-            ResultSet rs = newStatement.executeQuery();
-            while (rs.next()) {
-                categories.add(rs.getString("tag_name"));
-            }
-
-
-        } catch (SQLException e) {
-            System.out.println("SQLException: " + e.getMessage());
-        }
-        return this;
-    }
-
     @Override
     public void setValues(ResultSet rs) throws SQLException {
         this.name = rs.getString("recipe_name");
@@ -138,12 +118,14 @@ public class Recipe implements DataBaseRecordable {
     public void saveToDatabase(DataBaseLink link) throws SQLException {
         PreparedStatement p = null;
         p = link.openConection().prepareStatement("INSERT INTO recipes (" +
-                " recipe_name," +
-                " instructions," +
-                " recipe_description, " +
-                " source_id," +
-                " portions" +
-                ")" +
+                        "SELECT r.recipe_name," +
+                        " r.instructions," +
+                        " r.recipe_description," +
+                        " s.source_name," +
+                        " r.portions" +
+                        " FROM recipes r" +
+                        " LEFT JOIN sources s ON r.source_id = s.id" +
+                        " WHERE r.id = ?" +
                 " VALUES (?, ?, ?, ?, ?)"
         );
 

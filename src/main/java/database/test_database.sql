@@ -83,10 +83,11 @@ CREATE TABLE categories (
 
 DROP TABLE IF EXISTS pantry_ingredients;
 CREATE TABLE pantry_ingredients (
-    barcode         VARCHAR(255) PRIMARY KEY,
+    barcode         VARCHAR(255),
     expiry_date            DATE            DEFAULT (DATE('2999-1-1')),
     ingredient_quantity    DECIMAL  NOT NULL DEFAULT 0,
 
+    PRIMARY KEY (barcode,expiry_date),
     FOREIGN KEY (barcode) REFERENCES ingredients(barcode)
 );
 ------------ insertions -------------
